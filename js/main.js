@@ -1,15 +1,24 @@
 const canvas = document.getElementById("canvas");
-let ctx = canvas.getContext("2d");
+const ctx = canvas.getContext("2d");
 
-//Obtiene las dimensiones de la pantalla actual
-const window_height = window.innerHeight;
-const window_width = window.innerWidth;
+// Sliders
+const circlesSlider = document.getElementById("circlesSlider");
+const widthSlider = document.getElementById("widthSlider");
+const heightSlider = document.getElementById("heightSlider");
 
-//El canvas tiene las mismas dimensiones que la pantalla
-canvas.height = window_height/2;
-canvas.width = window_width/2;
+// Valores UI
+const circlesValue = document.getElementById("circlesValue");
+const widthValue = document.getElementById("widthValue");
+const heightValue = document.getElementById("heightValue");
+const canvasInfo = document.getElementById("canvasInfo");
 
-canvas.style.background = "#ff8";
+// Botón
+const randomBtn = document.getElementById("randomBtn");
+
+// Utilidad random
+function randomBetween(min, max) {
+  return Math.random() * (max - min) + min;
+}
 
 class Circle {
   constructor(x, y, radius, color, text, speed) {
@@ -18,89 +27,135 @@ class Circle {
     this.radius = radius;
     this.color = color;
     this.text = text;
-
     this.speed = speed;
 
-    this.dx = 1 * this.speed;
-    this.dy = 1 * this.speed;
+    const angle = Math.random() * Math.PI * 2;
+    this.dx = Math.cos(angle) * this.speed;
+    this.dy = Math.sin(angle) * this.speed;
   }
 
   draw(context) {
     context.beginPath();
-
-    context.strokeStyle = this.color;
-    context.textAlign = "center";
-    context.textBaseline = "middle";
-    context.font = "20px Arial";
-    context.fillText(this.text, this.posX, this.posY);
-
     context.lineWidth = 2;
-    context.arc(this.posX, this.posY, this.radius, 0, Math.PI * 2, false);
+    context.strokeStyle = this.color;
+    context.arc(this.posX, this.posY, this.radius, 0, Math.PI * 2);
     context.stroke();
     context.closePath();
+
+    context.fillStyle = this.color;
+    context.textAlign = "center";
+    context.textBaseline = "middle";
+    context.font = "14px Arial";
+    context.fillText(this.text, this.posX, this.posY);
   }
 
   update(context) {
-    //context.clearRect(0, 0, window_width, window_height);
-
     this.draw(context);
 
-    //Si el círculo supera el margen derecho entonces se mueve a la izquierda
-    if (this.posX + this.radius > window_width) {
-      this.dx = -this.dx;
-    }
+    const w = canvas.width;
+    const h = canvas.height;
 
-    //Si el círculo supera el margen izquierdo entonces se mueve a la derecha
-    if (this.posX - this.radius < 0) {
-      this.dx = -this.dx;
-    }
+    if (this.posX + this.radius > w) this.dx = -Math.abs(this.dx);
+    if (this.posX - this.radius < 0) this.dx = Math.abs(this.dx);
 
-    //Si el círculo supera el margen superior entonces se mueve hacia abajo
-    if (this.posY - this.radius < 0) {
-      this.dy = -this.dy;
-    }
-
-    //Si el círculo supera el margen inferior entonces se mueve hacia arriba
-    if (this.posY + this.radius > window_height) {
-      this.dy = -this.dy;
-    }
+    if (this.posY + this.radius > h) this.dy = -Math.abs(this.dy);
+    if (this.posY - this.radius < 0) this.dy = Math.abs(this.dy);
 
     this.posX += this.dx;
     this.posY += this.dy;
   }
 }
 
-/* let arrayCircle=[];
+let circles = [];
 
-for(let i=0; i<10;i++){
+function applyCanvasSize() {
+  canvas.width = Number(widthSlider.value);
+  canvas.height = Number(heightSlider.value);
 
-    let randomX =  Math.random()* window_width;
-    let randomY =  Math.random()* window_height;
-    let randomRadius = Math.floor(Math.random()*100 + 30);
+  widthValue.textContent = canvas.width;
+  heightValue.textContent = canvas.height;
+  canvasInfo.textContent = `${canvas.width} × ${canvas.height}`;
+}
 
-    let miCirculo = new Circle(randomX, randomY, randomRadius, 'blue', i+1);
+function getSafeRadius() {
+  const maxAllowed = Math.max(8, Math.floor(Math.min(canvas.width, canvas.height) / 4));
+  const minR = 8;
+  const maxR = Math.min(40, maxAllowed);
+  return Math.floor(randomBetween(minR, maxR + 1));
+}
 
-    //Agrega el objeto al array
-    arrayCircle.push(miCirculo);
-    arrayCircle[i].draw(ctx);
-} */
+function addCirclesUntil(n) {
+  const current = circles.length;
 
-let randomX = Math.random() * window_width;
-let randomY = Math.random() * window_height;
-let randomRadius = Math.floor(Math.random() * 100 + 30);
+  if (n <= current) {
+    circles = circles.slice(0, n);
+    circlesValue.textContent = n;
+    return;
+  }
 
-let miCirculo = new Circle(randomX, randomY, randomRadius, "blue", "Tec1", 5);
-miCirculo.draw(ctx);
+  for (let i = current; i < n; i++) {
+    const radius = getSafeRadius();
+    const margin = radius + 2;
 
-let miCirculo2 = new Circle(randomX, randomY, randomRadius, "red", "Tec2", 2);
-miCirculo2.draw(ctx);
+    const x = randomBetween(margin, canvas.width - margin);
+    const y = randomBetween(margin, canvas.height - margin);
 
-let updateCircle = function () {
-  requestAnimationFrame(updateCircle);
-  ctx.clearRect(0, 0, window_width, window_height);
-  miCirculo.update(ctx);
-  miCirculo2.update(ctx);
-};
+    const speed = randomBetween(1, 4);
+    const color = `hsl(${Math.random() * 360}, 80%, 45%)`;
+    const text = `Tec${i + 1}`;
 
-updateCircle();
+    circles.push(new Circle(x, y, radius, color, text, speed));
+  }
 
+  circlesValue.textContent = n;
+}
+
+function regenerateScene() {
+  circles = [];
+  addCirclesUntil(Number(circlesSlider.value));
+}
+
+// Inicialización
+applyCanvasSize();
+regenerateScene();
+
+// Eventos
+widthSlider.addEventListener("input", () => {
+  applyCanvasSize();
+  regenerateScene();
+});
+
+heightSlider.addEventListener("input", () => {
+  applyCanvasSize();
+  regenerateScene();
+});
+
+circlesSlider.addEventListener("input", () => {
+  addCirclesUntil(Number(circlesSlider.value));
+});
+
+randomBtn.addEventListener("click", () => {
+  const randomCount = Math.floor(randomBetween(1, 50));
+  const randomW = Math.floor(randomBetween(300, 1200));
+  const randomH = Math.floor(randomBetween(200, 800));
+
+  circlesSlider.value = randomCount;
+  widthSlider.value = randomW;
+  heightSlider.value = randomH;
+
+  applyCanvasSize();
+  circlesValue.textContent = randomCount;
+  regenerateScene();
+});
+
+// Animación
+function animate() {
+  requestAnimationFrame(animate);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  for (let i = 0; i < circles.length; i++) {
+    circles[i].update(ctx);
+  }
+}
+
+animate();

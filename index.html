@@ -1,18 +1,220 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/png" href="img/favicon.png">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/png" href="./img/favicon.png" />
+  <title>POO con Canvas</title>
 
-    <title>POO con Canvas</title>
+  <!-- Bootstrap 5 -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  />
+
+  <style>
+    :root{
+      --radius: 18px;
+      --border: 1px solid rgba(15,23,42,.12);
+      --shadow-soft: 0 14px 36px rgba(2,6,23,.18);
+      --shadow-strong: 0 22px 70px rgba(2,6,23,.28);
+
+      /* Paleta vibrante */
+      --bg-a: #0b1020;
+      --bg-b: #0e1630;
+      --bg-c: #1a0f2e;
+
+      --accent-a: #38bdf8;
+      --accent-b: #22d3ee;
+      --accent-c: #a78bfa;
+      --accent-d: #f472b6;
+
+      --panel: rgba(255,255,255,.90);
+      --text-main: #0f172a;
+      --text-soft: #64748b;
+    }
+
+    body{
+      min-height: 100vh;
+      color: var(--text-main);
+      background:
+        radial-gradient(900px 600px at 15% 10%, rgba(56,189,248,.35), transparent 60%),
+        radial-gradient(800px 500px at 85% 15%, rgba(167,139,250,.35), transparent 55%),
+        radial-gradient(900px 600px at 60% 85%, rgba(244,114,182,.28), transparent 55%),
+        linear-gradient(135deg, var(--bg-a), var(--bg-b), var(--bg-c));
+    }
+
+    .page{ padding: 24px 0 34px; }
+
+    .brand{ display:flex; align-items:center; gap:12px; }
+
+    .dot{
+      width: 12px; height: 12px; border-radius: 999px;
+      background: linear-gradient(135deg, var(--accent-a), var(--accent-c), var(--accent-d));
+      box-shadow: 0 0 0 7px rgba(56,189,248,.35), 0 0 30px rgba(167,139,250,.55);
+    }
+
+    .card-glass{
+      border-radius: var(--radius);
+      border: var(--border);
+      background: var(--panel);
+      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .panel-head{ padding: 18px 18px 0 18px; }
+    .panel-title{ font-weight: 900; letter-spacing:.3px; margin:0; }
+    .panel-sub{ color: var(--text-soft); margin-top:6px; }
+
+    .panel-body{ padding: 14px 18px 18px 18px; }
+
+    .btn-gradient{
+      border:none; color:white; border-radius:999px; padding:.45rem 1rem;
+      background: linear-gradient(135deg, var(--accent-a), var(--accent-c), var(--accent-d));
+      box-shadow: 0 12px 28px rgba(56,189,248,.55), 0 0 24px rgba(167,139,250,.45);
+    }
+
+    .badge-soft{
+      border-radius:999px; padding:.45rem .9rem; font-weight:900;
+      color:#0b3b5a;
+      border:1px solid rgba(56,189,248,.55);
+      background: linear-gradient(135deg, rgba(56,189,248,.35), rgba(167,139,250,.30));
+    }
+
+    .label{ font-weight:800; color:#0f172a; }
+    .hint{ color: var(--text-soft); font-size:.92rem; line-height:1.45; }
+
+    /* Canvas azul claro */
+    #canvas{
+      background: linear-gradient(180deg, #e9f7ff 0%, #d7efff 60%, #cbe9ff 100%);
+      border: 1px solid rgba(2,6,23,.18);
+      border-radius: 18px;
+      box-shadow: var(--shadow-strong);
+      width:100%;
+      height:auto;
+      display:block;
+    }
+
+    .slider-row{
+      padding: 14px 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(2,6,23,.10);
+      background: linear-gradient(180deg, #ffffff, #f5f8ff);
+      box-shadow: 0 10px 24px rgba(2,6,23,.10);
+    }
+
+    input[type="range"].form-range{ height: 18px; }
+
+    .form-range::-webkit-slider-runnable-track{
+      height: 10px; border-radius: 999px;
+      background: linear-gradient(90deg, var(--accent-a), var(--accent-b), var(--accent-c), var(--accent-d));
+    }
+    .form-range::-webkit-slider-thumb{
+      width: 24px; height: 24px; margin-top: -7px; border-radius: 999px;
+      background: radial-gradient(circle at 30% 30%, #ffffff, var(--accent-a), var(--accent-c), var(--accent-d));
+      border: 2px solid #ffffff;
+      box-shadow: 0 10px 22px rgba(2,6,23,.35);
+    }
+
+    @media (min-width: 992px){
+      .sticky-tools{ position: sticky; top: 16px; }
+    }
+  </style>
 </head>
 
 <body>
-    <canvas id="canvas"></canvas>
+  <div class="container page">
+    <!-- Header -->
+    <div class="brand mb-4">
+      <span class="dot"></span>
+      <div>
+        <h1 class="h3 mb-1" style="font-weight: 900; color: #eaf2ff;">POO con Canvas</h1>
+        <div style="color: rgba(234,242,255,.78);">
+          Ajusta los controles y mira la animación cambiar en tiempo real.
+        </div>
+      </div>
+    </div>
 
-    <script src="js/main.js"></script>
+    <div class="row g-4">
+      <!-- Panel -->
+      <div class="col-12 col-lg-4">
+        <div class="card-glass">
+          <div class="panel-head d-flex align-items-start justify-content-between gap-2">
+            <div>
+              <p class="panel-title h5">Panel de control</p>
+              <p class="panel-sub">Configura el número de círculos y el tamaño del canvas.</p>
+            </div>
+            <button id="randomBtn" class="btn-gradient btn btn-sm">Aleatorio</button>
+          </div>
+
+          <div class="panel-body">
+            <div class="d-grid gap-3">
+
+              <!-- Círculos -->
+              <div class="slider-row">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                  <div class="label">Cantidad de círculos</div>
+                  <span id="circlesValue" class="badge-soft">5</span>
+                </div>
+                <input id="circlesSlider" type="range" class="form-range" min="1" max="50" value="5" />
+                <div class="d-flex justify-content-between small text-secondary">
+                  <span>1</span><span>50</span>
+                </div>
+              </div>
+
+              <!-- Ancho -->
+              <div class="slider-row">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                  <div class="label">Ancho del canvas (px)</div>
+                  <span id="widthValue" class="badge-soft">900</span>
+                </div>
+                <input id="widthSlider" type="range" class="form-range" min="300" max="1200" value="900" />
+                <div class="d-flex justify-content-between small text-secondary">
+                  <span>300</span><span>1200</span>
+                </div>
+              </div>
+
+              <!-- Alto -->
+              <div class="slider-row">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                  <div class="label">Alto del canvas (px)</div>
+                  <span id="heightValue" class="badge-soft">450</span>
+                </div>
+                <input id="heightSlider" type="range" class="form-range" min="200" max="800" value="450" />
+                <div class="d-flex justify-content-between small text-secondary">
+                  <span>200</span><span>800</span>
+                </div>
+              </div>
+
+              <div class="hint">
+                Consejo: prueba <b>Aleatorio</b> para generar configuraciones distintas.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vista previa -->
+      <div class="col-12 col-lg-8">
+        <div class="card-glass p-3 p-md-4">
+          <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+            <div>
+              <div class="fw-bold">Vista previa</div>
+              <div class="text-secondary small">Movimiento continuo con rebote dentro del canvas.</div>
+            </div>
+            <div class="text-secondary small">
+              Tamaño: <span id="canvasInfo" class="fw-semibold">900 × 450</span>
+            </div>
+          </div>
+
+          <canvas id="canvas"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/main.js"></script>
 </body>
-
 </html>
